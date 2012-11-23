@@ -1,0 +1,13 @@
+CodeVisionAVR C Compiler V1.24.4 Standard
+(C) Copyright 1998-2004 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+e-mail:office@hpinfotech.com
+
+File: D:\SHAREDOCS\bfloader\main.c
+Global variables memory map:
+
+Variable                          Address   Size
+g_pbRxBuffer                         160h    128
+g_bRxBuffWritePosition                 R4      1
+g_bRxBuffReadPosition                  R5      1
+g_uRxCount                          R6,R7      2
