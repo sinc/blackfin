@@ -19,7 +19,7 @@ Notes:
 	
 Revision History:
 
-    18/04/11: created
+    18/10/12: created
 
 --*/
 #ifndef __ADF4351_H__
@@ -33,7 +33,7 @@ typedef union {
 		unsigned int FRAC: 12;
 		unsigned int controlBits: 3;
 	};
-	unsigned long value;
+	unsigned int value;
 } R0;
 
 typedef union {
@@ -45,7 +45,7 @@ typedef union {
 		unsigned int modulusValue: 12;
 		unsigned int controlBits: 3;
 	};
-	unsigned long value;
+	unsigned int value;
 } R1;
 
 typedef union {
@@ -66,23 +66,23 @@ typedef union {
 		unsigned int counterReset: 1;
 		unsigned int ControlBits: 3;
 	};
-	unsigned long value;
+	unsigned int value;
 } R2;
 
 typedef union {
 	struct {
-		unsigned int reserved: 8;
+		unsigned int reserved0: 8;
 		unsigned int bandSelectClockMode: 1;
 		unsigned int ABP: 1;
 		unsigned int chargeCancel: 1;
-		unsigned int reserved: 2;
+		unsigned int reserved1: 2;
 		unsigned int CSR: 1;
 		unsigned int reserved: 1;
 		unsigned int clockDivMode: 2;
 		unsigned int clockDividerValue: 12;
 		unsigned int ControlBits: 3;
 	};
-	unsigned long value;
+	unsigned int value;
 } R3;
 
 typedef union {
@@ -99,22 +99,20 @@ typedef union {
 		unsigned int OutputPower: 2;
 		unsigned int ControlBits: 3;
 	};
-	unsigned long value;
+	unsigned int value;
 } R4;
 
 typedef union {
 	struct {
-		unsigned int reserved: 8;
+		unsigned int reserved0: 8;
 		unsigned int LDPinMode: 2;
-		unsigned int reserved: 1;
-		unsigned int reserved: 2;
-		unsigned int reserved: 16;
+		unsigned int reserved1: 1;
+		unsigned int reserved2: 2;
+		unsigned int reserved3: 16;
 		unsigned int ControlBits: 3;
 	};
-	unsigned long value;
+	unsigned int value;
 } R5;
-
-//macros
 
 #ifdef __cplusplus
 extern "C"
