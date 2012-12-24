@@ -395,8 +395,22 @@ namespace bfloader
         private void readToolStripMenuItem_Click(object sender, EventArgs e)
         {
             byte[] buf;
-            m_manager.bulkRead(256, out buf);
-            buf[0] = 0;
+            m_manager.bulkRead(512, out buf);
+            SaveFileDialog saveDialog = new SaveFileDialog();
+            saveDialog.Filter = "Text files|*.txt";
+            if (saveDialog.ShowDialog() == DialogResult.OK)
+            {
+                string fileName = saveDialog.FileName;
+                using (TextWriter tw = new StreamWriter(fileName))
+                {
+                    for (int i = 0; i < buf.Length / 4; i++)
+                    {
+                        ushort adc2 = (ushort)((buf[4 * i + 3] << 8) | buf[4 * i + 2]); //big endian?
+                        ushort adc1 = (ushort)((buf[4 * i + 1] << 8) | buf[4 * i]);
+                        tw.WriteLine("{0}\t{1}", (float)(adc1 / 65536.0), (float)(adc2 / 65536.0));
+                    }
+                }
+            }
         }
     }
 }
