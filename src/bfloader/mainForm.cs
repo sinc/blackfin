@@ -395,7 +395,7 @@ namespace bfloader
         private void readToolStripMenuItem_Click(object sender, EventArgs e)
         {
             byte[] buf;
-            m_manager.bulkRead(512, out buf);
+            m_manager.bulkRead(2*512+8, out buf);
             SaveFileDialog saveDialog = new SaveFileDialog();
             saveDialog.Filter = "Text files|*.txt";
             if (saveDialog.ShowDialog() == DialogResult.OK)
@@ -403,11 +403,23 @@ namespace bfloader
                 string fileName = saveDialog.FileName;
                 using (TextWriter tw = new StreamWriter(fileName))
                 {
-                    for (int i = 0; i < buf.Length / 4; i++)
+                    int i = 0;
+                    for (; i < buf.Length; i++)
                     {
-                        ushort adc2 = (ushort)((buf[4 * i + 3] << 8) | buf[4 * i + 2]); //big endian?
-                        ushort adc1 = (ushort)((buf[4 * i + 1] << 8) | buf[4 * i]);
-                        tw.WriteLine("{0}\t{1}", (float)(adc1 / 65536.0), (float)(adc2 / 65536.0));
+                        if (buf[i + 0] == 0xfa &&
+                            buf[i + 1] == 0xce &&
+                            buf[i + 2] == 0xca &&
+                            buf[i + 3] == 0xfe)
+                        {
+                            i += 4;
+                            break;
+                        }
+                    }
+                    for (; i < buf.Length-1; i+=2)
+                    {
+                        ushort adc1 = (ushort)((buf[i + 1] << 8) | buf[i]);//big endian?
+                        ushort adc2 = (ushort)((buf[i] << 8) | buf[i + 1]);//big endian?
+                        tw.WriteLine("{0}\t{1}", (float)(adc1 / 32768.0 - 1.0), (float)(adc2 / 32768.0 - 1.0));
                     }
                 }
             }

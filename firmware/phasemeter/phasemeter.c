@@ -34,8 +34,8 @@ Revision History:
 #define kADCChannels 1
 #define kSamplesCount 512
 
-//#define SDRAM_START  0x00000000	// start address of SDRAM
-//#define SDRAM_SIZE	 0x02000000	// size of SDRAM in bytes (32 MB)
+#define SDRAM_START  0x00000000	// start address of SDRAM
+#define SDRAM_SIZE	 0x02000000	// size of SDRAM in bytes (32 MB)
 
 #define DEBUG(str, ...)							\
 	do {										\
@@ -48,7 +48,6 @@ struct sDMADescriptor{
 	struct sDMADescriptor *nextDescriptor;
 	volatile short *startAddress;
 };
-
 typedef struct sDMADescriptor DMADescriptor;
 
 //globals
@@ -57,9 +56,8 @@ volatile short g_psPPIRxBuffer[kADCChannels * kSamplesCount * 2];
 // set up DMA descriptors (sequence = 1st half, then second half, then repeat)
 // small descriptor model, only start address needs to be fetched
 DMADescriptor g_RxSecond;
-section("L1_data_a") DMADescriptor g_RxFirst = { &g_RxSecond, g_psPPIRxBuffer };
-section("L1_data_a") DMADescriptor g_RxSecond = { &g_RxFirst, (g_psPPIRxBuffer + sizeof(g_psPPIRxBuffer)/sizeof(g_psPPIRxBuffer[0])/2) };
-
+DMADescriptor g_RxFirst = { &g_RxSecond, g_psPPIRxBuffer };
+DMADescriptor g_RxSecond = { &g_RxFirst, (g_psPPIRxBuffer + kADCChannels * kSamplesCount * 2) };
 volatile int g_iCompleteRecieve = 0;
 volatile int g_iPingPongFlag = 0;
 
@@ -69,8 +67,9 @@ EX_INTERRUPT_HANDLER(PPI_RX_Isr)
 	g_iPingPongFlag = (g_iPingPongFlag + 1) & 1;
 	g_iCompleteRecieve = 1;
 	// confirm interrupt handling ( NO Error Handling is implemented!)
+	*pDMA0_CONFIG &= ~FLOW;
 	*pDMA0_IRQ_STATUS |= 0x0001;	// Write 1 to clear
-	*pSIC_IMASK &= ~DMA0_IRQ;
+	*pFIO_FLAG_T = PF0;
 	ssync();
 }
 
@@ -181,13 +180,13 @@ void
 main(
 )
 {
-	int interruptLatch;
+	int interruptLatch, i;
+	char key[] = { 0xFA, 0xCE, 0xCA, 0xFE }; 
 
 	sysreg_write(reg_SYSCFG, 0x32);		//Initialize System Configuration Register
-	
+
 	*pFIO_DIR = PF0 | PF1;	//other as inputs
 	*pFIO_FLAG_S = PF0;
-	*pFIO_FLAG_C = PF1;
 	ssync();
 	
 	initPLL();
@@ -197,15 +196,14 @@ main(
 	initUART();
 	initPPI();
 	
-	*pFIO_FLAG_T = PF1;
-	ssync();
-	
 	while (1) {
 		//asm("cli %0;" : "=d" (interruptLatch)); asm("ssync;");
 		if (g_iCompleteRecieve) {
 			g_iCompleteRecieve = 0;
+			sendBuf(key, 4);
 			sendBuf((char *)g_psPPIRxBuffer, kSamplesCount * kADCChannels * 2);
-			while(1);
+			sendBuf(key, 4);
+			//while(1);
 		}
 		//asm("sti %0;" : : "d" (interruptLatch)); asm("ssync;");
 	}

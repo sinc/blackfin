@@ -54,7 +54,7 @@ namespace bfloader
                 m_device.Close();
         }
 
-        private bool waitBytes(int count)
+        private uint waitBytes(uint count)
         {
             uint enableBytes = 0;
             System.Diagnostics.Stopwatch watcher = new System.Diagnostics.Stopwatch();
@@ -64,9 +64,9 @@ namespace bfloader
                 if (watcher.ElapsedMilliseconds < 60000)
                     m_device.GetRxBytesAvailable(ref enableBytes);
                 else
-                    return false;
+                    return enableBytes;
             }
-            return true;
+            return enableBytes;
         }
 
         private byte writeCommand(params byte[] cmd)
@@ -83,7 +83,7 @@ namespace bfloader
                 uint bytesWritten = 0;
                 if (m_device.Write(data, data.Length, ref bytesWritten) == FTDI.FT_STATUS.FT_OK)
                 {
-                    if (waitBytes(1))
+                    if (waitBytes(1) == 1)
                     {
                         byte[] buf = new byte[1];
                         if (m_device.Read(buf, 1, ref bytesWritten) == FTDI.FT_STATUS.FT_OK)
@@ -135,7 +135,7 @@ namespace bfloader
             uint bytes = 0;
             for (uint i = 0; i < 65536; ++i)
             {
-                if (writeCommand((byte)loaderCommands.LC_READ, (byte)i, (byte)(i >> 8)) == 0x55 && waitBytes(1))
+                if (writeCommand((byte)loaderCommands.LC_READ, (byte)i, (byte)(i >> 8)) == 0x55 && waitBytes(1) == 1)
                 {
                     m_device.Read(buf, 1, ref bytes);
                     tmp[i] = buf[0];
@@ -148,7 +148,7 @@ namespace bfloader
         {
             for (int i = 0; i < data.Length; i++)
             {
-                if (writeCommand((byte)loaderCommands.LC_READ, (byte)i, (byte)(i >> 8)) == 0x55 && waitBytes(1))
+                if (writeCommand((byte)loaderCommands.LC_READ, (byte)i, (byte)(i >> 8)) == 0x55 && waitBytes(1) == 1)
                 {
                     byte[] buf = new byte[1];
                     uint bytes = 0;
@@ -195,13 +195,13 @@ namespace bfloader
             return true;
         }
 
-        public bool bulkRead(int length, out byte[] buf)
+        public bool bulkRead(uint length, out byte[] buf)
         {
             FTDI.FT_STATUS fs;
             uint bytesReaded = 0;
-            buf = new byte[length];
-            waitBytes(length);
-            m_device.Read(buf, (uint)length, ref bytesReaded);
+            bytesReaded = waitBytes(length);
+            buf = new byte[bytesReaded];
+            m_device.Read(buf, bytesReaded, ref bytesReaded);
             return length == bytesReaded;
         }
     }
